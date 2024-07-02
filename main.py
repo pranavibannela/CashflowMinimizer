@@ -1,6 +1,10 @@
 import tkinter as tk
 from tkinter import ttk
 
+# Define num_people globally
+num_people = 0
+matrix = []
+
 # Function to calculate the minimum index of an array
 def minVal(arr):
     minVal = 0
@@ -29,11 +33,11 @@ def minCashFlow(amount, result_text):
     if amount[mxCredit] == 0 and amount[mxDebit] == 0:
         return
 
-    min = minof2(-amount[mxDebit], amount[mxCredit])
-    amount[mxCredit] -= min
-    amount[mxDebit] += min
+    min_amt = minof2(-amount[mxDebit], amount[mxCredit])
+    amount[mxCredit] -= min_amt
+    amount[mxDebit] += min_amt
 
-    result_text.append(f"Person {mxDebit + 1} pays {min} to Person {mxCredit + 1}")
+    result_text.append(f"Person {mxDebit + 1} pays {min_amt} to Person {mxCredit + 1}")
     minCashFlow(amount, result_text)
 
 # Function to handle the calculation and display results
@@ -47,13 +51,15 @@ def calculate_and_display_results():
             matrixRow = []
             for j in range(num_people):
                 value = matrix[i][j].get()
-                if not value.isdigit() and value != '':
+                if value.strip() == '':
+                    value = '0'
+                if not value.isdigit():
                     raise ValueError("Invalid input! Please enter valid numbers.")
                 matrixRow.append(int(value))
             new_matrix.append(matrixRow)
 
         # Calculate the net amount for each person
-        amount = [0 for _ in range(num_people)]
+        amount = [0] * num_people
         for i in range(num_people):
             for j in range(num_people):
                 amount[i] += new_matrix[j][i] - new_matrix[i][j]
@@ -69,8 +75,8 @@ def calculate_and_display_results():
         result_text = []
         minCashFlow(amount, result_text)
 
-        # Display results
-        result_label.config(text="\n".join(result_text), fg="white")
+        # Display results with black font color
+        result_label.config(text="\n".join(result_text), fg="black")
 
     except ValueError as e:
         result_label.config(text=str(e), fg="red")
@@ -90,42 +96,47 @@ def setup_matrix():
         matrixRow = []
         for j in range(num_people):
             entry = tk.Entry(matrix_frame, width=5)
-            entry.grid(row=i, column=j, padx=5, pady=5)
+            entry.grid(row=i + 1, column=j + 1, padx=5, pady=5)  # Shifted to start from row 1, column 1
             if i == j:
                 entry.insert(0, 0)
                 entry.config(state='disabled')
             matrixRow.append(entry)
         matrix.append(matrixRow)
 
+    # Add labels for clarity
+    for i in range(num_people):
+        tk.Label(matrix_frame, text=f"Person {i + 1}", fg="black").grid(row=0, column=i + 1, padx=5, pady=5)
+        tk.Label(matrix_frame, text=f"Person {i + 1}", fg="black").grid(row=i + 1, column=0, padx=5, pady=5)
+
     calculate_button = ttk.Button(root, text="Calculate", command=calculate_and_display_results)
-    calculate_button.grid(row=4, column=1, pady=10)
+    calculate_button.grid(row=num_people + 3, column=1, pady=10)
 
     result_label.config(text="")  # Clear any previous result
 
 # Create the main window
 root = tk.Tk()
 root.geometry("600x400")
-root.title("CashFlow Minimizer")
+root.title("Cash Flow Minimizer")
 
 style = ttk.Style()
 style.theme_use('clam')
 
-title = tk.Label(root, text="CashFlow Minimizer", font=("Helvetica", 16), fg="black")
+title = tk.Label(root, text="Cash Flow Minimizer", font=("Helvetica", 16), fg="black")
 title.grid(row=0, column=0, columnspan=3, pady=10)
 
 people_label = tk.Label(root, text="How many people?", fg="black")
 people_label.grid(row=1, column=0, pady=10)
 
-people_spinbox = ttk.Spinbox(root, from_=2, to=10, width=5)
+people_spinbox = ttk.Spinbox(root, from_=2, to=50, width=5)  # Adjusted to handle up to 50 people
 people_spinbox.grid(row=1, column=1, pady=10)
 
 submit_button = ttk.Button(root, text="Submit", command=setup_matrix)
 submit_button.grid(row=1, column=2, pady=10)
 
 matrix_frame = tk.Frame(root)
-matrix_frame.grid(row=3, column=0, columnspan=3, padx=20, pady=10)
+matrix_frame.grid(row=2, column=0, columnspan=3, padx=20, pady=10)
 
 result_label = tk.Label(root, text="", fg="black", justify="left")
-result_label.grid(row=5, column=0, columnspan=3, pady=10)
+result_label.grid(row=num_people + 4, column=0, columnspan=3, pady=10)
 
 root.mainloop()
